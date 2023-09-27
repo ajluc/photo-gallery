@@ -7,11 +7,31 @@ import { Capacitor } from "@capacitor/core";
 
 // Create a React hook to take and manage photos from the device
 
+const PHOTO_STORAGE = 'photos'
+
 export function usePhotoGallery() {
   // TS useState syntax slightly different from JS
   // Store the array of each photo captured with the camera
   const [photos, setPhotos] = useState<UserPhoto[]>([]);
   
+  // useEffect only called on render
+  useEffect(() => {
+    const loadSaved = async () => {
+      const { value } = await Preferences.get({ key: PHOTO_STORAGE })
+      const photosInPreferences = (value ? JSON.parse(value) : []) as UserPhoto[]
+
+      for (let photo of photosInPreferences) {
+        const file = await Filesystem.readFile({
+          path: photo.filepath,
+          directory: Directory.Data,
+        })
+        photo.webviewPath = `data:image/jpeg;base64,${file.data}`
+      }
+      setPhotos(photosInPreferences)
+    }
+    loadSaved()
+  }, [])
+
   // Use the Capacitor getPhoto method, which already contains platform-specific code
   const takePhoto = async () => {
     const photo = await Camera.getPhoto({
@@ -30,7 +50,8 @@ export function usePhotoGallery() {
     ]
       setPhotos(newPhotos);
 
-      
+      // Storing the photos array each time a new photo is taken
+      Preferences.set({key: PHOTO_STORAGE, value: JSON.stringify(newPhotos)})
 
   }
   return {
