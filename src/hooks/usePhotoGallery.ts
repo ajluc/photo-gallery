@@ -19,14 +19,17 @@ export function usePhotoGallery() {
     const loadSaved = async () => {
       const { value } = await Preferences.get({ key: PHOTO_STORAGE })
       const photosInPreferences = (value ? JSON.parse(value) : []) as UserPhoto[]
-
-      for (let photo of photosInPreferences) {
-        const file = await Filesystem.readFile({
-          path: photo.filepath,
-          directory: Directory.Data,
-        })
-        photo.webviewPath = `data:image/jpeg;base64,${file.data}`
+      // For web platform, need to read each image from filesystem in base64 format
+      if (!isPlatform('hybrid')) {
+        for (let photo of photosInPreferences) {
+          const file = await Filesystem.readFile({
+            path: photo.filepath,
+            directory: Directory.Data,
+          })
+          photo.webviewPath = `data:image/jpeg;base64,${file.data}`
+        }
       }
+
       setPhotos(photosInPreferences)
     }
     loadSaved()
@@ -70,15 +73,33 @@ export interface UserPhoto {
 
 // Saving images to the filesystem so they remain on application reload - pass in photo object and fileName, then save to Capacitor's Filesystem API using .writeFile
 const savePicture = async (photo: Photo, fileName: string): Promise<UserPhoto> => {
-  const base64Data = await base64FromPath(photo.webPath!);
+  let base64Data: string;
+  // "hybrid" detects Cordova or Capacitor - i.e. need to convert to base64
+  if (isPlatform('hybrid')) {
+    const file = await Filesystem.readFile({
+      path: photo.path!,
+    });
+    // I can't seem to find why this isn't okay!
+    base64Data = file.data;
+  } else {
+    base64Data = await base64FromPath(photo.webPath!);
+  }
+
   const savedFile = await Filesystem.writeFile({
     path: fileName,
     data: base64Data,
     directory: Directory.Data,
   })
+  if (isPlatform('hybrid')) {
+    return {
+      filepath: savedFile.uri,
+      webviewPath: Capacitor.convertFileSrc(savedFile.uri)
+    }
+  } else {
   return {
     filepath: fileName,
     webviewPath: photo.webPath,
+    }
   }
 }
 
