@@ -24,7 +24,7 @@ This project is a tutorial from Ionic to learn their framework.
 
 ### **_Technologies Used_**
 
-- JavaScript
+- TypeScript
 - React
 - CSS3
 - HTML
