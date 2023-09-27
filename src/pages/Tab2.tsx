@@ -6,7 +6,7 @@ import { usePhotoGallery } from '../hooks/usePhotoGallery';
 
 const Tab2: React.FC = () => {
   // Use custom hook to access the takePhoto method that was created
-  const { takePhoto } = usePhotoGallery()
+  const { takePhoto, photos } = usePhotoGallery()
 
   return (
     <IonPage>
@@ -16,6 +16,15 @@ const Tab2: React.FC = () => {
         </IonToolbar>
       </IonHeader>
       <IonContent fullscreen>
+        <IonGrid>
+          <IonRow>
+            {photos.map((photo, index) => (
+              <IonCol size='6' key={photo.filepath}>
+                <IonImg src={photo.webviewPath} />
+              </IonCol>
+            ))}
+          </IonRow>
+        </IonGrid>
         <IonFab vertical='bottom' horizontal='center' slot='fixed'>
           <IonFabButton onClick={() => takePhoto()}>
             <IonIcon icon={camera}></IonIcon>
