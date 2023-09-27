@@ -2,8 +2,12 @@ import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonFab, IonFabBut
 import { camera, trash, close } from 'ionicons/icons';
 import ExploreContainer from '../components/ExploreContainer';
 import './Tab2.css';
+import { usePhotoGallery } from '../hooks/usePhotoGallery';
 
 const Tab2: React.FC = () => {
+  // Use custom hook to access the takePhoto method that was created
+  const { takePhoto } = usePhotoGallery()
+
   return (
     <IonPage>
       <IonHeader>
